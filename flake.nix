@@ -20,13 +20,16 @@
           config.allowUnfree = true;
         };
 
-        # Exported packages for composition
-        haskellPackages = with pkgs; [
+        # Tools for development shells
+        haskellDevTools = with pkgs; [
           ghc
           cabal-install
           haskell-language-server
           postgresql
         ];
+
+        # Full haskellPackages set for building Cabal projects
+        haskellPkgs = pkgs.haskellPackages;
 
         # PostgreSQL library path for psql client
         postgresLibPath = pkgs.lib.makeLibraryPath [ pkgs.postgresql.lib ];
@@ -43,7 +46,7 @@
         devShells.default = pkgs.mkShell {
           name = "haskell-dev";
 
-          packages = haskellPackages;
+          packages = haskellDevTools;
 
           shellHook = ''
             ${haskellShellHook}
@@ -69,12 +72,16 @@
           # Function to create a Haskell-enabled shell
           mkHaskellShell = { additionalPackages ? [], additionalShellHook ? "" }:
             pkgs.mkShell {
-              packages = haskellPackages ++ additionalPackages;
+              packages = haskellDevTools ++ additionalPackages;
               shellHook = haskellShellHook + "\n" + additionalShellHook;
             };
 
-          # Export components for manual composition
-          inherit haskellPackages haskellShellHook;
+          # Full haskellPackages set for building Cabal projects with callCabal2nix
+          inherit haskellPkgs;
+
+          # Export components for manual composition (legacy names)
+          haskellPackages = haskellDevTools;
+          inherit haskellShellHook;
         };
 
         # Backwards compatibility
